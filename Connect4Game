@@ -1,0 +1,340 @@
+import java.util.Scanner;
+
+public class Connect4Game {
+
+	public static void main(String[] args) {
+		Scanner input = new Scanner(System.in);
+		boolean finish = false;
+		boolean player1 = true;
+		boolean player2 = false;
+		Connect4Grid ourGrid = new Connect4Grid2DArray();
+		ourGrid.emptyGrid();
+		while(!finish) {
+		System.out.println("1. 2 Players.\n2. Play with AI.\n3. Quit.\nChoose 1 - 3:");	
+		int choose = input.nextInt();
+		input.nextLine();
+		if(choose == 1) {
+			boolean win = false;
+			boolean full = false;
+			ourGrid.emptyGrid();
+			printGrid(ourGrid);
+			ConnectPlayer Player1 = new C4HumanPlayer();
+			ConnectPlayer Player2 = new C4HumanPlayer();
+			Player1.setColor("O");
+			Player2.setColor("X");
+			full = ourGrid.isGridFull();
+			while(win != true && full != true) {
+				System.out.println("input column from 1 - 7: ");
+				while(player1 == true) {
+					System.out.println("Player1 turn:");
+				int column = input.nextInt();
+				column = column - 1;
+				if(!ourGrid.isColumnFull(column) && ourGrid.isValidColumn(column) && !ourGrid.isGridFull()) {
+					ourGrid.dropPiece(Player1, column);
+					win = ourGrid.didLastPieceConnect4(Player1);
+					printGrid(ourGrid);
+					if(win == true) {
+						System.out.println("Player1 wins!");
+						ourGrid.emptyGrid();
+						break;
+					}
+					player1 = false;
+					player2 = true;
+					}
+				else{
+					System.out.println("Not a valid column");
+						}
+					}
+				while(player2 == true) {
+					System.out.println("Player2 turn:");
+				int column = input.nextInt();
+				column = column - 1;
+				if(!ourGrid.isColumnFull(column) && ourGrid.isValidColumn(column) && !ourGrid.isGridFull()) {
+					ourGrid.dropPiece(Player2, column);
+					win = ourGrid.didLastPieceConnect4(Player2);
+					printGrid(ourGrid);
+					if(win == true) {
+						System.out.println("Player2 wins!");
+						ourGrid.emptyGrid();
+						break;
+					}
+					player1 = true;
+					player2 = false;
+					}
+				else{
+					System.out.println("Not a valid column");
+						}
+					}
+				}
+			}
+		else if(choose == 2) {
+			boolean winAi = false;
+			boolean fullAi = false;
+			ourGrid.emptyGrid();
+			printGrid(ourGrid);
+			ConnectPlayer Player1 = new C4HumanPlayer();
+			ConnectPlayer AI = new C4HumanPlayer();
+			Player1.setColor("O");
+			AI.setColor("X");
+			fullAi = ourGrid.isGridFull();
+			while(winAi != true && fullAi != true) {
+				System.out.println("input column from 1 - 7: ");
+				while(player1 == true) {
+					System.out.println("Player1 turn:");
+				int column = input.nextInt();
+				column = column - 1;
+				if(!ourGrid.isColumnFull(column) && ourGrid.isValidColumn(column) && !ourGrid.isGridFull()) {
+					ourGrid.dropPiece(Player1, column);
+					winAi = ourGrid.didLastPieceConnect4(Player1);
+					printGrid(ourGrid);
+					if(winAi == true) {
+						System.out.println("Player1 wins!");
+						ourGrid.emptyGrid();
+						break;
+					}
+					player1 = false;
+					player2 = true;
+					}
+				}
+				while(player2 == true) {
+					System.out.println("AI turn:");
+					int columns = ourGrid.setAIPiece(AI);
+					winAi = ourGrid.didLastPieceConnect4(AI);
+					ourGrid.dropPiece(AI, columns);
+					printGrid(ourGrid);
+					if(winAi == true) {
+						System.out.println("AI wins!");
+						ourGrid.emptyGrid();
+						break;
+						}
+					player1 = true;
+					player2 = false;
+					}
+				}
+		}
+		
+		else if(choose == 3) {
+			finish = true;
+		}
+		else {
+			System.out.println("Invalid.");
+		}
+	}
+}
+	public static void printGrid(Connect4Grid ourGrid) {
+		for(int row = 0; row<6; row++) {
+			System.out.print(" | ");
+			for(int column = 0; column<7; column++) {
+			if(Connect4Grid2DArray.grid[row][column] == null) {
+				System.out.print("_");
+				}
+			else {
+				System.out.print(Connect4Grid2DArray.grid[row][column]);
+				}
+			System.out.print(" | ");
+			}
+		System.out.println();
+		System.out.println();
+		}
+	}
+
+}
+
+public class C4HumanPlayer extends ConnectPlayer {
+	private String color;
+	
+	public C4HumanPlayer() {
+		
+	}
+	public void setColor(String color){
+		this.color = color;
+	}
+	public String getColor() {
+		return color;
+	}
+
+}
+
+public class C4RandomAIPlayer extends ConnectPlayer{
+	public static String color;
+	public C4RandomAIPlayer() {
+		
+	}
+
+	@Override
+	public void setColor(String color) {
+		C4RandomAIPlayer.color = color;
+	}
+
+	@Override
+	public String getColor() {
+		return color;
+	}
+
+}
+
+public interface Connect4Grid {
+	public void emptyGrid();
+	public String toString();
+	public boolean isValidColumn(int column);
+	public boolean isColumnFull(int column);
+	public void dropPiece(ConnectPlayer player, int column);
+	public boolean didLastPieceConnect4(ConnectPlayer player);
+	public boolean isGridFull();
+	public int setAIPiece(ConnectPlayer player);
+
+}
+
+public class Connect4Grid2DArray implements Connect4Grid{
+public static int row = 6;
+public static int column = 7;
+
+public static String[][]grid = new String[row][column];
+
+	@Override
+	public void emptyGrid() {
+	for(int row = 0; row<Connect4Grid2DArray.row; row++) {
+		for(int column = 0; column<Connect4Grid2DArray.column; column++) {
+			Connect4Grid2DArray.grid[row][column] = null;
+		}
+	}
+		
+}
+
+	@Override
+	public boolean isValidColumn(int column) {
+		if(column >= Connect4Grid2DArray.column || column < 0) {
+		return false;
+		}
+		else {
+		return true;
+		}
+	}
+
+	@Override
+	public boolean isColumnFull(int column) {
+		boolean isFull = false;
+		boolean val = isValidColumn(column);
+		if(val == true) {
+		for(int row = 0; row < Connect4Grid2DArray.row; row++) {
+			if(Connect4Grid2DArray.grid[row][column] == null) {
+				isFull = false;
+				break;
+			}
+			else {
+				isFull = true;
+			}
+		}
+	}
+		else {
+			isFull = false;
+		}
+		return isFull;
+	}
+
+	@Override
+	public void dropPiece(ConnectPlayer player, int column) {
+		
+		for(int row = Connect4Grid2DArray.row - 1; row>=0; row--) {
+			if(Connect4Grid2DArray.grid[row][column] == null) {
+				Connect4Grid2DArray.grid[row][column] = player.getColor();
+				break;
+			}
+		}
+		
+	}
+
+	@Override
+	public boolean didLastPieceConnect4(ConnectPlayer player) {
+		String check = player.getColor();
+		for(int row = 0; row<Connect4Grid2DArray.grid.length; row++){
+			for (int col = 0;col < Connect4Grid2DArray.grid[0].length - 3;col++){
+				if (Connect4Grid2DArray.grid[row][col] == check  && 
+					Connect4Grid2DArray.grid[row][col+1] == check &&
+					Connect4Grid2DArray.grid[row][col+2] == check &&
+					Connect4Grid2DArray.grid[row][col+3] == check){
+					return true;
+				}
+			}			
+		}
+		//vertical
+		for(int row = 0; row < Connect4Grid2DArray.grid.length - 3; row++){
+			for(int col = 0; col < Connect4Grid2DArray.grid[0].length; col++){
+				if (Connect4Grid2DArray.grid[row][col] == check   && 
+					Connect4Grid2DArray.grid[row+1][col] == check &&
+					Connect4Grid2DArray.grid[row+2][col] == check &&
+					Connect4Grid2DArray.grid[row+3][col] == check){
+					return true;
+				}
+			}
+		}
+		//up diagonal
+		for(int row = 3; row < Connect4Grid2DArray.grid.length; row++){
+			for(int col = 0; col < Connect4Grid2DArray.grid[0].length - 3; col++){
+				if (Connect4Grid2DArray.grid[row][col] == check   && 
+					Connect4Grid2DArray.grid[row-1][col+1] == check &&
+					Connect4Grid2DArray.grid[row-2][col+2] == check &&
+					Connect4Grid2DArray.grid[row-3][col+3] == check){
+					return true;
+				}
+			}
+		}
+		//down diagonal
+		for(int row = 0; row < Connect4Grid2DArray.grid.length - 3; row++){
+			for(int col = 0; col < Connect4Grid2DArray.grid[0].length - 3; col++){
+				if (Connect4Grid2DArray.grid[row][col] == check   && 
+					Connect4Grid2DArray.grid[row+1][col+1] == check &&
+					Connect4Grid2DArray.grid[row+2][col+2] == check &&
+					Connect4Grid2DArray.grid[row+3][col+3] == check){
+					return true;
+				}
+			}
+		}
+		return false;
+		// For this function, when making the rules and conditions I have used the idea from a different code 
+		// on github which the code can be found at https://gist.github.com/jonathan-irvin/97537512eb65a8bbcb9a
+	}
+
+	@Override
+	public boolean isGridFull() {
+		boolean isFull = false;
+		for(int row = 0; row<Connect4Grid2DArray.row; row++) {
+			for(int column = 0; column<Connect4Grid2DArray.column; column++) {
+			if(grid[row][column] == null) {
+				isFull = false;
+				break;
+				}
+			else {
+				isFull = true;
+				}
+			}
+			if(isFull == false) {
+				break;
+			}
+			else {
+				isFull = true;
+			}
+		}
+		return isFull;
+	}
+	public int setAIPiece(ConnectPlayer ai) {
+		int columns =  (int) (Math.random() * ((7)));
+		boolean valid = false;
+		boolean full = true;
+		valid = isValidColumn(columns);
+		full = isColumnFull(columns);
+		while(!valid && full) {
+			columns =  (int) (Math.random() * ((7)));
+			valid = isValidColumn(columns);
+			full = isColumnFull(columns);
+		}
+		return columns;
+	}
+}
+
+public abstract class ConnectPlayer {
+	public String color;
+public abstract void setColor(String color);
+public abstract String getColor();
+}
+
