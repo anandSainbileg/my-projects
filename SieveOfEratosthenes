@@ -1,0 +1,98 @@
+import java.util.Scanner;
+import java.lang.*;
+public class SieveOfEratosthenes {
+
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+		Scanner input = new Scanner(System.in);
+		System.out.print("Enter int >= 2 : ");
+		int N = input.nextInt();
+		int[] array1 = new int[N-1];
+		array1 = createSequence(N);
+		for(int index = 0; index<array1.length-1; index++) {
+		System.out.print(array1[index] + ", ");
+		}
+		System.out.println(array1[N-2]);
+		int root = (int) Math.sqrt(N);
+		for(int number = 0; array1[number] <= root; number++) {
+			crossOutHigherMultiples(array1, number);
+			String[] allNumbers = sequenceToString(array1);
+			for(int g = 0; g<allNumbers.length - 1; g++) {
+				System.out.print(allNumbers[g] + ", ");
+			}
+			System.out.print(allNumbers[allNumbers.length -1]);
+			System.out.println();
+		}
+		int count = countPositiveNumbers(array1);
+		int[] sieveArray = sieve(array1, count);
+		
+		String[] subseq = nonCrossedOutSubseqToString(sieveArray);
+		for(int f = 0; f<subseq.length - 1; f++) {
+			System.out.print(subseq[f]+ ", ");
+		}
+		System.out.print(subseq[subseq.length - 1]);
+	}
+	public static int[] createSequence(int N) {
+		int[] array1 = new int [N-1];
+		int[] tempArray = new int[N-1];
+		for(int i = 0; i<N-1; i++) {
+		tempArray[i] = i + 2;
+		}
+		array1 = tempArray;
+		return(array1);
+	}
+	public static void crossOutHigherMultiples( int[]array1, int number){
+		int remainder;
+		if(array1 != null) {	
+			for(int i = number + 1; i<array1.length; i++) {
+				if(array1[i]>0) {	
+					remainder = array1[i] % array1[number];
+					if(remainder == 0) {
+					array1[i] = array1[i] * -1;
+					}
+				}
+			}
+		}
+	}
+	public static String[] sequenceToString(int[] array1) {
+	String[] allNumbers = new String[array1.length];
+	if(array1 != null) {
+	for(int a = 0; a<array1.length; a++) {
+		if(array1[a]>0) {
+		allNumbers[a] = Integer.toString(array1[a]);
+		}
+		if(array1[a]<0) {
+			allNumbers[a] = "[" + Integer.toString(Math.abs(array1[a])) + "]";
+			}
+		}
+	}
+		return allNumbers;
+}
+	public static int[] sieve(int[] array1, int count) {
+		int[] sieveArray = new int[count];
+		int g = 0;
+			for(int i = 0; i<array1.length; i++) {	
+				if(array1[i]>0) {
+					sieveArray[g] = array1[i];
+					g = g + 1;
+				}
+			}
+			return sieveArray;
+	}
+	public static int countPositiveNumbers(int[] array1) {
+		int count = 0;
+		for(int i = 0; i<array1.length; i++) {
+			if(array1[i]>0) {
+				count = count + 1;
+			}
+		}
+		return count;
+	}
+	public static String[] nonCrossedOutSubseqToString(int[] sieveArray) {
+		String[] subseq = new String[sieveArray.length];
+		for(int i = 0; i<sieveArray.length; i++) {
+			subseq[i] = Integer.toString(sieveArray[i]);
+		}
+		return subseq;
+		}
+}
