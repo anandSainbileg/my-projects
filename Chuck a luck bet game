@@ -1,0 +1,248 @@
+import java.util.Scanner;
+
+public class ChuckALuck {
+
+		public static void main(String[] args) {
+
+		Wallet myWallet = new Wallet();
+		String betType = "";
+		double initialBalance = 0;
+		double finalBalance = 0;
+		Scanner input = new Scanner(System.in);
+		boolean finish = false;
+		boolean finishWallet = false;
+		while(!finishWallet) {
+		System.out.print("How much money do you want to bet with: ");
+		if(input.hasNextDouble()) {
+		double money = input.nextDouble();
+		if(money > 0) {
+		myWallet.put(money);
+		initialBalance = myWallet.check();
+		finishWallet = true;
+			}
+		else {
+			System.out.println("Insufficient amount of money");
+			}
+		}
+		
+	}
+		int bet;
+		System.out.println("Betting Options \n"
+				+ "Type of Bet:   Condition:					Payout (Odds): \n"
+				+ "1. Triple	All 3 dice show same number (but not 1s or 6s).			30:1 \n"
+				+ "2. Field	Total of 3 dice < 8 or total is > 12.				1:1 \n"
+				+ "3. High		Total of 3 dice > 10 (but not a high Triple).		1:1 \n"
+				+ "4. Low		Total of 3 dice < 11 (but not a low Triple).		1:1");
+		System.out.println(myWallet.toString());
+		while(!finish) {
+			System.out.println("Choose type of bet from 1 to 4 or type 'quit' to quit: ");
+			
+			if(input.hasNextInt()) {
+				bet = input.nextInt();
+				
+			if(bet > 0 && bet <= 4) {
+				if(bet == 1) {
+					betType = "Triple";
+				
+				}
+				else if(bet == 2) {
+					betType = "Field";
+					
+				}
+				else if(bet == 3) {
+					betType = "High";
+					
+				}
+				else if (bet == 4){
+					betType = "Low";
+					
+				}
+				ResolveBet(betType, myWallet);
+				double money = myWallet.check();
+				if(money <= 0) {
+					finish = true;
+					finalBalance = 0.0;
+					System.out.println("You ran out of money (betting is bad)");
+				}
+			}
+			
+			else {
+				System.out.println("Invalid. Please choose an integer from 1 - 4.");
+				}
+			
+			}
+			else {
+				String word = input.next();
+				if(word.equalsIgnoreCase("quit")) {
+					finalBalance = myWallet.check();
+					System.out.println("Great time to quit!");
+					finish = true;
+					
+				}
+				else {
+					System.out.println("Invalid. Please choose an integer.");
+				}
+			}
+		}
+		System.out.println("You started with " + initialBalance + " and now you have " + finalBalance);
+	}
+	public static void ResolveBet(String betType, Wallet myWallet) {
+		Scanner input = new Scanner(System.in);
+		double amount = 0;
+		boolean finish = false;
+		while(!finish) {
+			System.out.println("How much do you want to bet with:");
+			if(input.hasNextDouble()) {
+				amount = input.nextDouble();
+				if(amount <= myWallet.check() && amount > 0) {
+					finish = true;
+			}
+		else {
+			 System.out.println("You don't have enough money ");
+			 
+		 		}
+			}
+			else {
+				System.out.println("Please input a number ");
+				finish = true;
+			}
+		 
+		}
+		Dice dice1 = new Dice(6);
+		dice1.roll();
+		Dice dice2 = new Dice(6);
+		dice2.roll();
+		Dice dice3 = new Dice(6);
+		dice3.roll();
+		System.out.println(dice1.toString() + " " + dice2.toString() + " " + dice3.toString());
+		double total = dice1.topFace() + dice2.topFace() + dice3.topFace();
+		if(betType == "Triple") {
+			if(dice1.topFace() == dice2.topFace() && dice2.topFace() == dice3.topFace() && dice3.topFace() != 1 && dice3.topFace() != 6){
+					System.out.println("Your bet won! ");	
+					myWallet.put(amount * 30);
+					System.out.println(myWallet.toString());
+			}
+			else { 
+			myWallet.get(amount);
+			System.out.println("Your bet lost ");
+			System.out.println(myWallet.toString());
+			}
+		}
+		if(betType == "Field") {
+			if(total < 8 || total > 12) {
+				System.out.println("Your bet won! ");	
+				myWallet.put(amount);
+				System.out.println(myWallet.toString());
+			}
+		
+			else{
+				myWallet.get(amount);
+				System.out.println("Your bet lost ");
+				System.out.println(myWallet.toString());
+			}
+		}
+		if(betType == "High") {
+			if(total > 10 && !(dice1.topFace() == dice2.topFace() 
+					&& dice2.topFace() == dice3.topFace() && dice3.topFace() >= 4)) {
+				System.out.println("Your bet won! ");	
+				myWallet.put(amount);
+				System.out.println(myWallet.toString());
+			}
+			else{
+				myWallet.get(amount);
+				System.out.println("Your bet lost ");
+				System.out.println(myWallet.toString());
+			}
+		}
+		if(betType == "Low") {
+			if(total > 10 && !(dice1.topFace() == dice2.topFace() 
+					&& dice2.topFace() == dice3.topFace() && dice3.topFace() < 4)) {
+				System.out.println("Your bet won! ");	
+				myWallet.put(amount);
+				System.out.println(myWallet.toString());
+			}
+			else{
+				myWallet.get(amount);
+				System.out.println("Your bet lost ");
+				System.out.println(myWallet.toString());
+			}
+		}
+	}
+}
+
+public class Dice {
+    // number of sides on dice
+    private final int sides;
+
+    // current number on top face of dice
+    private int topFace;
+
+    // construct a dice with n sides, pre-condition: n > 1
+    public Dice(int n) {
+        sides = n > 1 ? n : 2; // ensure at least 2 sides
+        topFace = (int) (Math.random() * sides) + 1;
+    }
+
+    // construct a dice with 6 sides
+    public Dice() {
+        this(6); // invoke Dice constructor with value 6
+        
+    }
+
+    // return current value of top face of dice
+    public int topFace() {
+        return topFace;
+    }
+
+    // roll the dice; returning the result
+    public int roll() {
+        topFace = (int) (Math.random() * sides) + 1;
+        return topFace;
+    }
+
+    // convert to a String data type value
+    public String toString() {
+        return getClass().getName() + "[sides = " + sides + ", topFace = " + topFace + "]";
+    }
+
+}
+
+public class Wallet {
+
+    // current cash in wallet
+    private double cash;
+
+    // construct wallet with zero cash
+    public Wallet() {
+        cash = 0.0;
+    }
+
+    // put an amount of money into wallet
+    // pre-condition: money > 0.0
+    public void put(double money) {
+        if (money > 0.0)
+            cash = cash + money;
+    }
+
+    // get an amount of money from wallet
+    // returns true if wallet had enough cash, false otherwise
+    // pre-condition: money > 0.0
+    public boolean get(double money) {
+        if (money > 0.0 && cash >= money) {
+            cash = cash - money;
+            return true;
+        }
+        return false;
+    }
+
+    // return current amount of cash in wallet
+    public double check() {
+        return cash;
+    }
+
+    // convert to a String data type value
+    public String toString() {
+        return getClass().getName() + "[cash = " + cash + "]";
+    }
+
+}
