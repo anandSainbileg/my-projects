@@ -3,44 +3,35 @@
   .fpu softvfp
   .thumb
 
-  .global Main
+  .global Init_Test
+  .global rpn_expr
 
+  .equ  USR_STACK_SIZE,0x400
 
   .section  .text
 
-Main:
-  STMFD   SP!, {LR}
 
-  LDR     R0, =0x3f000000   @ 0.5
-  LDR     R1, =0x3f000000   @ 0.5
-  BL      fp_add             @ result should be 1.0 (0x3f800000)
+  .type     Init_Test, %function
+Init_Test:
 
-  LDR     R0, =0x3f800000    @ 1.0
-  LDR     R1, =0x3f800000    @ 1.0
-  BL      fp_add             @ result should be 2.0 (0x40000000)
+  LDR     R1, =rpn_expr           @ start address of a string containing
+                                  @   the RPN expression
+  
+  LDR     R12, =user_stack_top    @ stack pointer for a user stack that
+                                  @ you can use instead of the system stack
+  
+  BX      LR
 
-  LDR     R0, =0x3f000000    @ 0.5
-  LDR     R1, =0x3f800000    @ 1.0
-  BL      fp_add             @ result should be 1.5 (0x3fc00000)
 
-  LDR     R0, =0x3f800000    @ 0.5
-  LDR     R1, =0x3f000000    @ 1.0
-  BL      fp_add             @ result should be 1.5 (0x3fc00000)
+  .section  .rodata
 
-  LDR     R0, =0x41200000    @ 10
-  LDR     R1, =0x3fe00000    @ 1.75
-  BL      fp_add             @ result should be 11.75 (0x413c0000)
+rpn_expr:
+  .asciz   "2"           @ test RPN expression
 
-  LDR     R0, =0xc1200000    @ -10
-  LDR     R1, =0x3fe00000    @ 1.75
-  BL      fp_add             @ result should be -8.25 (0xc1040000)
 
-  LDR     R0, =0x41200000    @ 10
-  LDR     R1, =0xbfe00000    @ -1.75
-  BL      fp_add             @ result should be 8.25 (0x41040000)
-
-End_Main:
-  LDMFD   SP!, {PC}
-
+  .section  .data
+user_stack:
+  .space    USR_STACK_SIZE        @ Space for the user stack
+user_stack_top:
 
 .end
