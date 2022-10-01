@@ -1,0 +1,244 @@
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Collections;
+import java.util.Date;
+import java.text.SimpleDateFormat;  
+import grafica.*;
+PImage spaceImage;
+
+ArrayList<SpaceObject> mySpaceObject; // Tanuj Sood, creating ArrayList to store all the instances of class SpaceObjects, 11:25am 21/03/2022
+ArrayList widgetList;
+ArrayList<String> shipStates;
+ArrayList<String> uniqueStates;
+ArrayList<Float> massArrayList;
+ArrayList<Float> diameterArrayList;
+Chart statesHist;
+Chart massHist;
+boolean chartScreen = false;
+Chart diameterHist;
+Screen currentScreen, screen1, screen2, queryScreen, queryResultScreen;    //Tanuj Sood, 30/03/22, added two screen, one to display queries and one to display results
+String [] data;
+PFont font, font2;
+Chart lengthHist;
+ProgrammingProject main = this;
+SearchBar focus;
+ScrollBar scrollOne; 
+SearchScreen searchScreen;
+//Ignacy Sus 30/03 created an array with all the correct character, it was to fix a bug where it is impossible for the user to get a sattellite when typing the name, because the capslock button or shift would be an unkown character for processing
+char []checkKeys = {'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'
+,'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',' ',ENTER,BACKSPACE,'-','_','"','1','2','3','4','5','6','7','8','9','0'};//,"h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y"}; 
+query queries; 
+
+void settings()
+{
+  size(SCREEN_X, SCREEN_Y); // Ignacy Sus changed from size() to fullscreen()
+}
+
+void setup()
+{
+  queries = new query(5); // add coment
+  data = loadStrings("gcat1k.tsv");
+  mySpaceObject = new ArrayList(); // Tanuj Sood, initalizing the ArrayList, 11:25am 21/03/2022
+for (int i =1; i<data.length;i++) //Ignacy Sus, loop to create instances and add them to the array 21/03/2022
+{
+  mySpaceObject.add(new SpaceObject(data[i]));  
+}
+shipStates = new ArrayList();
+massArrayList = getMassArrayList(mySpaceObject);
+getShipsPerState(mySpaceObject);
+uniqueStates = getListOfUniqueStates(shipStates);
+lengthHist = new Chart(200, 0, "Amount", "Length in cm", -0.5, 50.0, -0.5, 500.0, queries.lengthQuery(mySpaceObject), LENGTH_HISTOGRAM, "Distribution of lengths");
+lengthHist.constructChart();
+statesHist = new Chart(600, 0, "Amount", "State", -0.5, Float.valueOf(uniqueStates.size()), 0.0, 800.0, shipStates, "Number of Satellites by state");
+statesHist.constructChart();
+massHist = new Chart(1000, 0, "Amount", "Mass in KG", -2.0, 1100.0, -0.5, 450.0, massArrayList, MASS_HISTOGRAM, "Distribution of masses" );
+massHist.constructChart();
+diameterArrayList = getDiameterArrayList(mySpaceObject);
+diameterHist = new Chart(1400, 0, "Amount", "Diameter in meters", -1.0, 45.0, -0.5, 500.0, diameterArrayList, DIAMETER_HISTOGRAM, "Distribution of diameters" );
+diameterHist.constructChart();
+Widget widget1, widget2, queryScreenWidget,queryWidget1,queryWidget2,queryWidget3;  // Tanuj Sood, 30/03/22, added widgets to implement queries
+Images image1;
+focus = null;
+spaceImage = loadImage("spaceObjects.jpg");      //Anand Sainbileg loading the images 3/30/2022
+font = loadFont("AcademyEngravedLetPlain-30.vlw");  // Ignacy Sus, creating and loading the font to print the instances 11:51 20/03/2022
+font2 = loadFont("Avenir-Light-40.vlw");
+screen1 = new Screen(color(#03379B));
+screen2 = new Screen(color(0));
+queryScreen = new Screen(color(255));  // add comment
+queryResultScreen = new Screen(color(255));
+image1 = new Images(151, 0, 2000, 1100);           
+widget1 = new Widget(0, SCREEN_Y/400 , 150, 70,"Home", color(255), font, EVENT_BUTTON1,NORMAL_TEXT_SIZE);    //Anand Sainbileg made updates on the screens and widgets and added image constructor 3/30/2022
+widget2 = new Widget(0, SCREEN_Y/5, 150, 70, "charts", color(255), font, EVENT_BUTTON2,NORMAL_TEXT_SIZE); // 
+queryScreenWidget = new Widget(0, 150, 150, 70, "queries", color(255), font, EVENT_BUTTON4,NORMAL_TEXT_SIZE); // add comment
+queryWidget1 =  new Widget(300, 60, 800, 70,  "Overall Space Objects does the United States have", color(255), font, EVENT_QUERY1,NORMAL_TEXT_SIZE); //Tanuj Sood, 30/03/22, created query widgets
+queryWidget2 =  new Widget(300, 150, 650, 70, "See the max length of all the space obejcts", color(255), font, EVENT_QUERY2,NORMAL_TEXT_SIZE);
+queryWidget3 =  new Widget(300, 240, 650, 70, "See the max mass in the data", color(255), font, EVENT_QUERY3,NORMAL_TEXT_SIZE);
+
+screen1.add(widget1);
+screen2.add(widget1);
+screen1.add(widget2); 
+screen1.add(queryScreenWidget);
+queryScreen.addScreenText(700, 50, "QUERIES", color(0));
+queryScreen.add(widget1); 
+queryScreen.add(queryWidget2);
+queryScreen.add(queryWidget1);
+queryScreen.add(queryWidget3);
+queryResultScreen.add(widget1);
+//screen1.addImage(image1);
+currentScreen = screen1;
+textFont(font);
+
+
+//lengthHist = new Chart(500, 500, "Number", "Length", 0, 50, -1, 500, queries.lengthQuery(mySpaceObject)); // add comment
+SearchBar searchData = new SearchBar((int)(0.35*width), (int)(0.05*height), (int)(width*0.30),(int)(height*0.03), "you can edit me", color(255),font2, EVENT_SEARCH,(((int)(height*0.03))/2),40);
+screen1.add(searchData);
+scrollOne = new ScrollBar(0,(0.2*height),(int)(0.025*width),(int)(0.8*height),16);
+searchScreen = new SearchScreen(color(20,20,30), mySpaceObject,font2);
+
+}
+
+void draw()
+{
+  background(BLACK);
+  currentScreen.draw();// Anand Sainbileg added screen to the setup and added widget to the current screen 
+ //displayAll();
+ // for(int i = 0; i<widgetList.size(); i++){
+ //Widget aWidget = (Widget) widgetList.get(i);
+ // aWidget.mouseMoved(mouseX, mouseY);
+ //}
+  if (chartScreen){
+  lengthHist.draw();
+  massHist.draw();
+  statesHist.draw();
+  diameterHist.draw();
+  }
+}
+
+void mousePressed(){  //Anand Sainbileg made mousePressed to get event
+int event;
+for(int i = 0; i<currentScreen.screenWidgets.size(); i++){ 
+  Widget aWidget = (Widget) currentScreen.screenWidgets.get(i);
+event = aWidget.getEvent(mouseX,mouseY); 
+chartScreen = false;
+switch(event) 
+{
+case EVENT_BUTTON1:
+  aWidget.eventNumber(EVENT_BUTTON1);
+  currentScreen = screen1;
+  return;
+case EVENT_BUTTON2:
+  aWidget.eventNumber(EVENT_BUTTON2);
+  chartScreen= true;
+  currentScreen = screen2;
+  return;
+case EVENT_BUTTON3:
+  aWidget.eventNumber(EVENT_BUTTON3);
+  return;
+  case EVENT_SEARCH:
+  println("clicked on a text widget");
+  focus = (SearchBar) searchScreen.searchBar;
+  return;
+ // Tanuj Sood, 30/03/22, implemented a new  query screen and the subsequent displaying of all the queries using switch statement.
+ 
+case EVENT_BUTTON4:                                  
+  aWidget.eventNumber(EVENT_BUTTON2);
+  currentScreen = queryScreen;
+  return;
+
+case EVENT_QUERY1:                                  
+  aWidget.eventNumber(EVENT_BUTTON2);
+  currentScreen = queryResultScreen;
+  queryResultScreen.addScreenText(300,110,queries.USlaunchesNum(mySpaceObject) , color(0));
+  return;
+case EVENT_QUERY2:                                  
+  aWidget.eventNumber(EVENT_BUTTON2);
+  currentScreen = queryResultScreen;
+  queryResultScreen.addScreenText(300,110, String.valueOf(queries.findMaxLength(queries.lengthQuery(mySpaceObject))), color(0));
+  return;
+case EVENT_QUERY3:                                  
+  aWidget.eventNumber(EVENT_BUTTON2);
+  currentScreen = queryResultScreen;
+  queryResultScreen.addScreenText(300,110, String.valueOf(queries.getMaxMass(mySpaceObject)), color(0));
+  return;
+    }
+  }
+}
+//Ignacy Sus 29/03 adding keyboard input for the searchBar class and the search screen, 
+// Ignacy Sus 30/03 adding the checkKeys[i] with an if statement to fix the shift and capslock bug which made a search impossible ( except for numbers), as it was also labelled as a key when typing
+  void keyPressed(){
+    if(focus !=null){
+      for (int i = 0; i<checkKeys.length;i++){
+        if (checkKeys[i]==key ){
+          focus.append(key);
+        }
+      }
+    }
+  }
+ void mouseReleased(){  //Anand Sainbileg made mouseReleased to make the widget's color change back to normal after releasing the mouse off of it
+  int g = 0;
+  for (int i = 0; i < currentScreen.screenWidgets.size(); i++){
+      Widget aWidget = (Widget) currentScreen.screenWidgets.get(i);
+      aWidget.eventNumber(g);
+      }
+  }
+
+void displayAll(){
+  for (int i=0; i<mySpaceObject.size(); i++){ // Tanuj Sood, creating a for loop to print all the instances, 11:25am 21/03/2022
+    if (VARIATION*i<displayHeight)
+    {
+      text(mySpaceObject.get(i).getString(),TEXT_X,TEXT_Y+i*VARIATION); 
+    }
+    
+  }
+  
+}
+void getShipsPerState(ArrayList<SpaceObject> mySpaceObject)//Gerard Moylan 30/3/22
+{
+  for (int i = 0; i < mySpaceObject.size(); i++)
+  {
+    shipStates.add(mySpaceObject.get(i).state);
+  }
+}
+ArrayList<String> getListOfUniqueStates(ArrayList<String> shipStates)//Gerard Moylan 30/3/22
+{
+  ArrayList<String> uniqueStates = new ArrayList();
+  for (int i = 0; i < shipStates.size(); i++)
+  {
+      if (!uniqueStates.contains(shipStates.get(i)))
+      {
+        uniqueStates.add(shipStates.get(i));
+      }
+  }
+  return uniqueStates;
+}
+ArrayList<Float> getMassArrayList(ArrayList<SpaceObject> mySpaceObject)//Gerard Moylan 30/3/22 Had to make it an arraylist of floats so that it worked with the methods i used
+{
+  ArrayList<Float> massArrayList = new ArrayList();
+  for (int i = 0; i < mySpaceObject.size(); i++)
+  {
+    massArrayList.add(Float.valueOf(mySpaceObject.get(i).mass));
+  }
+  return massArrayList;
+}
+Float getMaxDiameter(ArrayList<SpaceObject> mySpaceObject)//Gerard Moylan 30/3/22
+{
+  Float maxDiameter = 0.0;
+  for (int i = 0; i < mySpaceObject.size(); i++)
+  {
+    if (mySpaceObject.get(i).diameter > maxDiameter)
+    {
+      maxDiameter = mySpaceObject.get(i).diameter;
+    }
+  }
+  return maxDiameter;
+}
+ArrayList<Float> getDiameterArrayList(ArrayList<SpaceObject> mySpaceObject)//Gerard Moylan 30/3/22
+{
+  ArrayList<Float> diameterArrayList = new ArrayList();
+  for (int i = 0; i < mySpaceObject.size(); i++)
+  {
+    diameterArrayList.add(mySpaceObject.get(i).diameter);
+  }
+  return diameterArrayList;
+}

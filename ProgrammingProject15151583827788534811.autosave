@@ -1,0 +1,830 @@
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Collections;
+import java.util.Date;
+import java.text.SimpleDateFormat;  
+import java.util.*;
+import java.text.*;
+import grafica.*;
+PImage spaceImage, roverImg, neil, noImg, chartImg, searchBar, queryImg, sputnik, isc, kalamSat, parker, searchpic;
+PImage earth;
+ArrayList<SpaceObject> mySpaceObject; // Tanuj Sood, creating ArrayList to store all the instances of class SpaceObjects, 11:25am 21/03/2022
+ArrayList widgetList;
+ArrayList<String> shipStates;
+ArrayList<Screen> screenList;        // Anand Sainbileg 04/01/2022 made screenList to save previous or next screen 
+ArrayList<Chart> chartList;
+ArrayList<Float> launchYearList;
+ArrayList<Float> lengthArrayList = new ArrayList();
+ArrayList<String> listOfUniqueStates;
+ArrayList<Float> massArrayList = new ArrayList();
+ArrayList<Float> diameterArrayList = new ArrayList();
+ArrayList<Float> perigeeArrayList = new ArrayList();
+ArrayList<Float> apogeeArrayList = new ArrayList();
+ArrayList<Float> incArrayList = new ArrayList();
+ArrayList<Float> emptyList = new ArrayList(0);
+ArrayList<Float> selectedParameter;
+ArrayList<Float> selectedParameter2;
+float selectedParameterMaxValue;
+float selectedParameterMaxValue2;
+
+ArrayList<Widget> scatterPlotWidgets = new ArrayList();
+ArrayList<Widget> scatterPlotWidgets2 = new ArrayList();
+StringHistogram statesHist; 
+FloatHistogram massHist;
+FloatHistogram lengthHist;
+FloatHistogram diameterHist;
+FloatLineGraph lengthLineGraph;
+FloatHistogram launchYearHist;
+FloatHistogram apogeeHist;
+FloatHistogram perigeeHist;
+FloatHistogram incHist;
+ScatterPlot scatterPlot;
+int currentGraphBeingDrawn = 0;
+Widget statesWidget, massWidget, lengthWidget, diameterWidget, launchYearWidget, apogeeWidget, perigeeWidget, incWidget, queryWidget7;
+Widget swapWidget;
+Widget massSelect, lengthSelect, diameterSelect, launchYearSelect, apogeeSelect, perigeeSelect, incSelect;
+Widget scatterPlotSelect;
+Widget massSelect2, lengthSelect2, diameterSelect2, launchYearSelect2, apogeeSelect2, perigeeSelect2, incSelect2;
+Widget scatterPlotConfirm;
+
+Widget widget1, widget2, queryScreenWidget,queryWidget1,queryWidget2,queryWidget3, backButton, details,enterWidget,queryWidget5,queryWidget6, 
+queryWidget8, queryWidget9, queryWidget10, gallery, gal1, gal2, gal3, gal4;
+//boolean chartScreen = false;
+Screen currentScreen, screen1, screen2, queryScreen, queryResultScreen, homeScreen,galScreen, galResult;       //Tanuj Sood, 30/03/22, added two screen, one to display queries and one to display results
+Screen chartScreen;
+Screen scatterPlotScreen;
+String [] data;
+PFont font, font2, font3;
+
+ProgrammingProject main = this;
+SearchBar focus;
+ScrollBar scrollOne; 
+SearchScreen searchScreen;
+//Ignacy Sus 30/03 created an array with all the correct character, it was to fix a bug where it is impossible for the user to get a sattellite when typing the name, because the capslock button or shift would be an unkown character for processing
+char []checkKeys = {'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'
+,'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',' ',ENTER,BACKSPACE,'-','_','"','1','2','3','4','5','6','7','8','9','0'};//,"h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y"}; 
+query queries; 
+Widget searchWidget;
+
+
+ScrollBar queryScroll;
+int queryNum=0;
+int[] someMass;
+int[] massArray;
+ArrayList<Float> diameterArray;
+ArrayList<Float> perigeeArray;
+ArrayList<Float> apogeeArray;
+int median;
+int sum;
+int mean;
+double sd;
+String  massy="";
+String namy= "";
+Images image1;
+void settings()
+{
+
+  fullScreen();  
+  // Tanuj changed size back to 1280x960 as background images have to be the same size as the picture and to make testing easier.
+  //§size(1920,1080); // Ignacy Sus changed from size() to fullscreen()
+
+}
+
+void setup()
+{
+  queries = new query(5); // add coment
+  data = loadStrings("gcat.tsv");
+  mySpaceObject = new ArrayList(); // Tanuj Sood, initalizing the ArrayList, 11:25am 21/03/2022
+for (int i =1; i<data.length;i++) //Ignacy Sus, loop to create instances and add them to the array 21/03/2022
+{
+  mySpaceObject.add(new SpaceObject(data[i]));  
+}
+screenList = new ArrayList();
+shipStates = new ArrayList();
+massArray = queries.sortMassAsc();
+diameterArray = queries.getDiameterArrayList(mySpaceObject);
+Collections.sort(diameterArray);
+//perigeeArrayList = queries.getPerigeeArrayList(mySpaceObject);
+//apogeeArrayList = queries.getApogeeArrayList(mySpaceObject);
+//incArrayList = queries.getIncArrayList(mySpaceObject);
+launchYearList = queries.getYearArrayList(mySpaceObject);
+//lengthArrayList = queries.getLengthArrayList(mySpaceObject);
+//massArrayList = queries.getMassArrayList(mySpaceObject);
+//diameterArrayList = queries.getDiameterArrayList(mySpaceObject);
+queries.getArrayLists(mySpaceObject);
+queries.getShipsPerState(mySpaceObject);
+listOfUniqueStates = queries.getListOfUniqueStates(shipStates);
+lengthHist = new FloatHistogram("Amount", "Length in cm", -0.5, LENGTH_UPPER_LIMIT, -0.5, 36000.0, "Distribution of lengths", lengthArrayList);
+statesHist = new StringHistogram("Amount", "State", -0.5, Float.valueOf(listOfUniqueStates.size()), 0.0, 17000.0, "Number of Satellites by state", 
+shipStates, listOfUniqueStates);
+massHist = new FloatHistogram("Amount", "Mass in KG", -2.0, MASS_UPPER_LIMIT, -0.5, 30000.0, "Distribution of masses", massArrayList);
+diameterHist = new FloatHistogram("Amount", "Diameter in meters", -0.5, DIAMETER_UPPER_LIMIT, -0.5, 35000.0, "Distribution of diameters", diameterArrayList);
+launchYearHist = new FloatHistogram("Amount", "Launch Year", LAUNCH_YEAR_LOWER_LIMIT, LAUNCH_YEAR_UPPER_LIMIT, -0.5, 4500.0, "Distribution of launch years", launchYearList);
+apogeeHist = new FloatHistogram("Amount", "Apogee", -0.5, APOGEE_UPPER_LIMIT, -0.5, 400.0, "Distribution of Apogees", apogeeArrayList);
+perigeeHist = new FloatHistogram("Amount", "Perigee", -0.5, PERIGEE_UPPER_LIMIT, -0.5, 400.0, "Distribution of Perigees", perigeeArrayList);
+incHist = new FloatHistogram("Amount", "Inclination", -0.5, INCLINATION_UPPER_LIMIT, -0.5, 6000.0, "Distribution of Inclinations", incArrayList);
+
+scatterPlot = new ScatterPlot(" ", " ", -0.5, 0.0, -0.5, 0.0, " ", 
+emptyList, emptyList);
+chartList = new ArrayList();
+chartList.add(lengthHist);
+chartList.add(statesHist);
+chartList.add(massHist);
+chartList.add(diameterHist);
+chartList.add(launchYearHist);
+chartList.add(apogeeHist);
+chartList.add(perigeeHist);
+chartList.add(incHist);
+   // Tanuj Sood, 30/03/22, added widgets to implement queries
+
+focus = null;
+queryImg = loadImage("Queries.jpeg");
+searchBar = loadImage("searchBar.jpeg");
+chartImg = loadImage("chartsImg.jpeg");
+earth = loadImage("earthpng.png");
+spaceImage = loadImage("spaceObjects.jpg");      //Anand Sainbileg loading the images 3/30/2022
+font = loadFont("AcademyEngravedLetPlain-30.vlw");  // Ignacy Sus, creating and loading the font to print the instances 11:51 20/03/2022
+font2 = loadFont("Avenir-Light-40.vlw");
+font3 = loadFont("AcademyEngravedLetPlain-30.vlw");
+sputnik = loadImage("sputnik.jpeg");
+isc = loadImage("ics2.jpeg");
+kalamSat = loadImage("kalamsat.jpeg");
+parker = loadImage("parker.jpeg");
+searchpic = loadImage("sear.jpeg");
+screen1 = new Screen(color(#03379B));
+screenList.add(screen1);
+screen2 = new Screen(color(0));
+queryScreen = new Screen(color(255));  // add comment
+queryResultScreen = new Screen(color(255));
+image1 = new Images(0, 0, 2000, 1100);   
+homeScreen = new Screen(color(0));
+chartScreen = new Screen(color(#03379B));
+galScreen = new Screen(color(255));        // Anand Sainbileg implemented gallery query 04/07/2022
+galResult = new Screen(color(255));
+//screenList.add(homeScreen);
+scatterPlotScreen = new Screen(color(#03379B));
+enterWidget = new Widget(655, 145 , 150, 50,"     ENTER", color(255), font3, EVENT_ENTER,NORMAL_TEXT_SIZE,false, noImg);
+widget1 = new Widget(0, 0 , 150, 50,"Home", color(255), font, EVENT_BUTTON1,NORMAL_TEXT_SIZE,false,noImg);    //Anand Sainbileg made updates on the screens and widgets and added image constructor 3/30/2022
+
+
+widget2 = new Widget(Math.round(displayWidth/7.68), Math.round(displayHeight/7.2), Math.round(displayWidth/6), Math.round(displayHeight/5.4), "Charts", color(255), font, EVENT_BUTTON2,NORMAL_TEXT_SIZE+30,true,noImg); // 
+queryScreenWidget = new Widget(Math.round(displayWidth/2.259), Math.round(displayHeight/7.2), Math.round(displayWidth/6), Math.round(displayHeight/5.4), "Queries", color(255), font, EVENT_BUTTON4,NORMAL_TEXT_SIZE+30,true,noImg);
+searchWidget = new Widget(Math.round(displayWidth/3.624), Math.round(displayHeight/2.54), Math.round(displayWidth/6), Math.round(displayHeight/5.4), "Search", color(0), font,  EVENT_SEARCH_SCREEN,NORMAL_TEXT_SIZE+30,true,searchpic); 
+widget2.textXPos += Math.round(displayWidth/42.66667);
+queryScreenWidget.textXPos += Math.round(displayWidth/42.66667);
+searchWidget.textXPos+= Math.round(displayWidth/42.66667);
+widget2.textYPos -= Math.round(displayHeight/14.4);
+queryScreenWidget.textYPos -= Math.round(displayHeight/14.4);
+searchWidget.textYPos -= Math.round(displayHeight/14.4);
+
+
+queryWidget1 =  new Widget(300, 60, 800, 70,  "Length", color(255), font, EVENT_QUERY1,NORMAL_TEXT_SIZE,false,noImg); //Tanuj Sood, 30/03/22, created query widgets
+queryWidget2 =  new Widget(300, 150, 650, 70, "Diameter", color(255), font, EVENT_QUERY2,NORMAL_TEXT_SIZE,false,noImg);
+queryWidget3 =  new Widget(1100, 100, 200, 40, "Max", color(255), font, EVENT_QUERY3,NORMAL_TEXT_SIZE,false,noImg);
+queryWidget5 =  new Widget(300, 240, 650, 70, "Mass", color(255), font, EVENT_QUERY5,NORMAL_TEXT_SIZE,false,noImg);      // Anand Sainbileg added extra queryWidgets 04/11/2022
+queryWidget6 =  new Widget(1100, 50, 200, 40, "Descending order", color(255), font, EVENT_QUERY6,NORMAL_TEXT_SIZE,false,noImg);
+queryWidget7 =  new Widget(1100, 150, 200, 40, "Median", color(255), font, EVENT_QUERY7,NORMAL_TEXT_SIZE,false,noImg);
+queryWidget8 =  new Widget(1100, 200, 200, 40, "Sum", color(255), font, EVENT_QUERY8,NORMAL_TEXT_SIZE,false,noImg);
+queryWidget9 =  new Widget(1100, 250, 200, 40, "Mean", color(255), font, EVENT_QUERY9,NORMAL_TEXT_SIZE,false,noImg);
+queryWidget10 = new Widget(1100, 300, 200, 40, "Standard Deviation", color(255), font, EVENT_QUERY10,NORMAL_TEXT_SIZE,false,noImg);
+statesWidget = new Widget(200, 50, 300, 70, "Satellites per state", color(255), font, EVENT_BUTTON11, NORMAL_TEXT_SIZE, false, noImg);
+massWidget = new Widget(200, 150, 300, 70, "Distribution of masses", color(255), font, EVENT_BUTTON12, NORMAL_TEXT_SIZE, false, noImg);
+lengthWidget = new Widget(200, 250, 300, 70, "Distribution of lengths", color(255), font, EVENT_BUTTON13, NORMAL_TEXT_SIZE, false, noImg);
+diameterWidget = new Widget(200, 350, 300, 70, "Distribution of diameters", color(255), font, EVENT_BUTTON14, NORMAL_TEXT_SIZE, false, noImg);
+launchYearWidget = new Widget(200, 450, 300, 70, "Distribution of launch years", color(255), font, EVENT_BUTTON34, NORMAL_TEXT_SIZE, false, noImg);
+apogeeWidget = new Widget(200, 550, 300, 70, "Distribution of Apogees", color(255), font, EVENT_BUTTON35, NORMAL_TEXT_SIZE, false, noImg);
+perigeeWidget = new Widget(200, 650, 300, 70, "Distribution of Perigees", color(255), font, EVENT_BUTTON36, NORMAL_TEXT_SIZE, false, noImg);
+incWidget = new Widget(200, 750, 300, 70, "Distribution of incs", color(255), font, EVENT_BUTTON37, NORMAL_TEXT_SIZE, false, noImg);
+
+swapWidget = new Widget(Math.round(displayWidth/1.06666667), Math.round(displayHeight/2.7), Math.round(displayWidth/16), Math.round(displayHeight/15.43), "Swap view", color(255), font, EVENT_BUTTON16, NORMAL_TEXT_SIZE, false, noImg);
+gallery = new Widget (300, 800, 650, 70, "Gallery", color(255), font, EVENT_GAL,NORMAL_TEXT_SIZE,false,noImg);
+gal1 = new Widget (300, 60, 800, 70, "First ever launched satellite", color(255), font, EVENT_GAL1,NORMAL_TEXT_SIZE,false,noImg);
+gal2 = new Widget (300, 150, 800, 70, "Heaviest satellite ever", color(255), font, EVENT_GAL2,NORMAL_TEXT_SIZE,false,noImg);
+gal3 = new Widget (300, 240, 800, 70, "Lightest and the smallest satellite ever", color(255), font, EVENT_GAL3,NORMAL_TEXT_SIZE,false,noImg);
+gal4 = new Widget (300, 330, 800, 70, "The fastest satellite ever", color(255), font, EVENT_GAL4,NORMAL_TEXT_SIZE,false,noImg);
+//launchYearWidget = new Widget(200, )
+scatterPlotSelect = new Widget(0, 110, 150, 50, "Scatter plots", color(255), font, EVENT_BUTTON17, NORMAL_TEXT_SIZE, false, noImg);
+massSelect = new Widget(Math.round(displayWidth/95), Math.round(displayHeight/7), Math.round(displayWidth/18), Math.round(displayHeight/20), "Mass", color(255), font, EVENT_BUTTON18, NORMAL_TEXT_SIZE, false, noImg);
+lengthSelect = new Widget(Math.round(displayWidth/95) + Math.round(displayWidth/16), Math.round(displayHeight/7), Math.round(displayWidth/18), Math.round(displayHeight/20), "Length", color(255), font, EVENT_BUTTON19, NORMAL_TEXT_SIZE, false, noImg);
+diameterSelect = new Widget(Math.round(displayWidth/95) + 2*Math.round(displayWidth/16), Math.round(displayHeight/7), Math.round(displayWidth/18), Math.round(displayHeight/20), "Diameter", color(255), font, EVENT_BUTTON20, NORMAL_TEXT_SIZE, false, noImg);
+launchYearSelect = new Widget(Math.round(displayWidth/95) + 3*Math.round(displayWidth/16), Math.round(displayHeight/7), Math.round(displayWidth/18), Math.round(displayHeight/20), "Launch year", color(255), font, EVENT_BUTTON21, NORMAL_TEXT_SIZE-2, false, noImg);
+apogeeSelect = new Widget(Math.round(displayWidth/95) + 4*Math.round(displayWidth/16), Math.round(displayHeight/7), Math.round(displayWidth/18), Math.round(displayHeight/20), "Apogee", color(255), font, EVENT_BUTTON22, NORMAL_TEXT_SIZE, false, noImg);
+perigeeSelect = new Widget(Math.round(displayWidth/95) + 5*Math.round(displayWidth/16), Math.round(displayHeight/7), Math.round(displayWidth/18), Math.round(displayHeight/20), "Perigee", color(255), font, EVENT_BUTTON23, NORMAL_TEXT_SIZE, false, noImg);
+incSelect = new Widget(Math.round(displayWidth/95) + 6*Math.round(displayWidth/16), Math.round(displayHeight/7), Math.round(displayWidth/18), Math.round(displayHeight/20), "Inc", color(255), font, EVENT_BUTTON24, NORMAL_TEXT_SIZE, false, noImg);
+
+massSelect2 = new Widget(Math.round(displayWidth/95), Math.round(displayHeight/2.25), Math.round(displayWidth/18), Math.round(displayHeight/20), "Mass", color(255), font, EVENT_BUTTON25, NORMAL_TEXT_SIZE, false, noImg);
+lengthSelect2 = new Widget(Math.round(displayWidth/95) + Math.round(displayWidth/16), Math.round(displayHeight/2.25), Math.round(displayWidth/18), Math.round(displayHeight/20), "Length", color(255), font, EVENT_BUTTON26, NORMAL_TEXT_SIZE, false, noImg);
+diameterSelect2 = new Widget(Math.round(displayWidth/95) + 2*Math.round(displayWidth/16), Math.round(displayHeight/2.25), Math.round(displayWidth/18), Math.round(displayHeight/20), "Diameter", color(255), font, EVENT_BUTTON27, NORMAL_TEXT_SIZE, false, noImg);
+launchYearSelect2 = new Widget(Math.round(displayWidth/95) + 3*Math.round(displayWidth/16), Math.round(displayHeight/2.25), Math.round(displayWidth/18), Math.round(displayHeight/20), "Launch year", color(255), font, EVENT_BUTTON28, NORMAL_TEXT_SIZE-2, false, noImg);
+apogeeSelect2 = new Widget(Math.round(displayWidth/95) + 4*Math.round(displayWidth/16), Math.round(displayHeight/2.25), Math.round(displayWidth/18), Math.round(displayHeight/20), "Apogee", color(255), font, EVENT_BUTTON29, NORMAL_TEXT_SIZE, false, noImg);
+perigeeSelect2 = new Widget(Math.round(displayWidth/95) + 5*Math.round(displayWidth/16), Math.round(displayHeight/2.25), Math.round(displayWidth/18), Math.round(displayHeight/20), "Perigee", color(255), font, EVENT_BUTTON30, NORMAL_TEXT_SIZE, false, noImg);
+incSelect2 = new Widget(Math.round(displayWidth/95) + 6*Math.round(displayWidth/16), Math.round(displayHeight/2.25), Math.round(displayWidth/18), Math.round(displayHeight/20), "Inc", color(255), font, EVENT_BUTTON31, NORMAL_TEXT_SIZE, false, noImg);
+scatterPlotConfirm = new Widget(Math.round(displayWidth/38), Math.round(displayHeight/1.2), Math.round(displayWidth/6), Math.round(displayHeight/10), "Confirm selection", color(255), font, EVENT_BUTTON38, NORMAL_TEXT_SIZE+18, false, noImg);
+
+backButton = new Widget(0, 50, 150, 50,"Back", color(255), font, EVENT_BUTTON10,NORMAL_TEXT_SIZE,false,noImg);          //Anand Sainbileg 04/01/2022 added a widget called "back", this widget can appear on screens which that screen
+// leads to multiple screens and would be useful to just go back to previous screen instead of going to home screen.
+details = new Widget(0, 0, 150, 50,"Welcome", color(255), font, 69,NORMAL_TEXT_SIZE,false,noImg);
+queryScreen.add(backButton);
+//screen1.add(details);          
+screen2.add(backButton);
+screen1.add(widget2); 
+screen1.add(searchWidget);    //Anand Sainbileg fixed the bugs, displayed the queries widget back on the screen and added search widget to screen1
+screen1.add(queryScreenWidget);
+queryScreen.addScreenText(700, 50, "QUERIES", color(255),font);
+queryScreen.add(widget1); 
+queryScreen.add(queryWidget2);
+queryScreen.add(queryWidget1);
+queryScreen.add(queryWidget5);
+queryResultScreen.add(queryWidget3);    // Anand Sainbileg updated the widget locations
+queryResultScreen.add(queryWidget6);
+queryResultScreen.add(queryWidget8);
+chartScreen.add(statesWidget);
+chartScreen.add(massWidget);
+chartScreen.add(lengthWidget);
+chartScreen.add(diameterWidget);
+chartScreen.add(backButton);
+chartScreen.add(swapWidget);
+chartScreen.add(scatterPlotSelect);
+chartScreen.add(launchYearWidget);
+chartScreen.add(apogeeWidget);
+chartScreen.add(perigeeWidget);
+chartScreen.add(incWidget);
+
+scatterPlotWidgets.add(massSelect);
+scatterPlotWidgets.add(lengthSelect);
+scatterPlotWidgets.add(diameterSelect);
+scatterPlotWidgets.add(launchYearSelect);
+scatterPlotWidgets.add(apogeeSelect);
+scatterPlotWidgets.add(perigeeSelect);
+scatterPlotWidgets.add(incSelect);
+scatterPlotWidgets2.add(massSelect2);
+scatterPlotWidgets2.add(lengthSelect2);
+scatterPlotWidgets2.add(diameterSelect2);
+scatterPlotWidgets2.add(launchYearSelect2);
+scatterPlotWidgets2.add(apogeeSelect2);
+scatterPlotWidgets2.add(perigeeSelect2);
+scatterPlotWidgets2.add(incSelect2);
+
+scatterPlotScreen.add(backButton);
+scatterPlotScreen.add(massSelect);
+scatterPlotScreen.add(lengthSelect);
+scatterPlotScreen.add(diameterSelect);
+scatterPlotScreen.add(launchYearSelect);
+scatterPlotScreen.add(apogeeSelect);
+scatterPlotScreen.add(perigeeSelect);
+scatterPlotScreen.add(incSelect);
+
+scatterPlotScreen.add(massSelect2);
+scatterPlotScreen.add(lengthSelect2);
+scatterPlotScreen.add(diameterSelect2);
+scatterPlotScreen.add(launchYearSelect2);
+scatterPlotScreen.add(apogeeSelect2);
+scatterPlotScreen.add(perigeeSelect2);
+scatterPlotScreen.add(incSelect2);
+scatterPlotScreen.add(scatterPlotConfirm);
+queryScreen.add(gallery);
+galScreen.add(widget1);          // Anand Sainbileg implemented gallery query 04/07/2022
+galScreen.add(backButton);
+galResult.add(widget1);
+galResult.add(backButton);
+galScreen.add(gal1);
+galScreen.add(gal2);
+galScreen.add(gal3);
+galScreen.add(gal4);
+
+homeScreen.addScreenText(20,30, "WELCOME TO A PROGRAMMING PROJECT,", color(0), font3);        // TANUJ SOOD figure out a better way to type multiple texts line in a scree
+homeScreen.addScreenText2(20,60, "BY:", color(0), font3); 
+
+homeScreen.addScreenText3(20,90, "ANAND S", color(0), font3); 
+homeScreen.addScreenText4(20,120, "GERARD M", color(0), font3); 
+homeScreen.addScreenText5(20,150, "IGNACY S", color(0), font3); 
+homeScreen.addScreenText6(20,180, "TANUJ S", color(0), font3); 
+
+screen1.addScreenText(550,30, "HOME SCREEN", color(255), font3);
+
+
+queryResultScreen.add(widget1);
+queryResultScreen.add(backButton);
+homeScreen.add(enterWidget);
+//screen1.addImage(image1);
+currentScreen = homeScreen;
+textFont(font);
+searchScreen = new SearchScreen(color(20,20,30), mySpaceObject,font2, earth);
+searchScreen.add(widget1);
+roverImg = loadImage("roverImg.jpeg");   
+homeScreen.changeBackground(roverImg);      // Tanuj Sood, changing home screen image
+//earth.resize(1920,1080);
+//queryScreen.changeBackground(earth);
+neil = loadImage("neil.jpeg");
+neil.resize(1920,1080);
+queryScreen.changeBackground(neil);
+queryScroll=new ScrollBar(0,(0.2*height),(int)(0.015*width),(int)(0.8*height),16);
+}
+
+void draw()
+{
+ 
+  background(BLACK);
+  currentScreen.draw();// Anand Sainbileg added screen to the setup and added widget to the current screen 
+  if (currentScreen == scatterPlotScreen)
+  {
+    scatterPlot.draw();
+    fill(255);
+    textFont(font2);
+    textSize(25);
+    text("Choose the parameter for the X axis. ", Math.round(displayWidth/9.14), Math.round(displayHeight/7.2));
+    text("Choose the parameter for Y axis. ", Math.round(displayWidth/9.14), Math.round(displayHeight/2.322));
+  }
+
+    
+  if (currentScreen==chartScreen){
+  lengthWidget.draw();
+  massWidget.draw();
+  statesWidget.draw();
+  diameterWidget.draw();
+  switch (currentGraphBeingDrawn)
+  {
+    case EVENT_BUTTON11:
+    statesHist.draw();
+    return;
+    case EVENT_BUTTON12:
+    massHist.draw();
+    return;
+    case EVENT_BUTTON13:
+    lengthHist.draw();
+    return;
+    case EVENT_BUTTON14:
+    diameterHist.draw();
+    return;
+    case EVENT_BUTTON34:
+    launchYearHist.draw();
+    return;
+    case EVENT_BUTTON35:
+    apogeeHist.draw();
+    return;
+    case EVENT_BUTTON36:
+    perigeeHist.draw();
+    return;
+    case EVENT_BUTTON37:
+    incHist.draw();
+    return;
+  }
+  }
+  
+  switch(queryNum)
+  {
+    case 1:  // MASS ASCENDING
+      textAlign(BOTTOM);
+      textFont(font);
+      fill(255);
+      text("Mass",980,150);
+      text(massy,1000,200,100,1000);
+      text("Name",300,150);
+      text(namy,300,200,500,1000);
+      queryScroll.display();
+      queryScroll.update();
+      
+     case 2:  // MASS DESCENDING
+      textAlign(BOTTOM);
+      textFont(font);
+      fill(255);
+      text("Mass",980,150);
+      text(massy,1000,200,100,1000);
+      text("Name",300,150);
+      text(namy,300,200,500,1000);
+      queryScroll.display();
+      queryScroll.update();
+      
+    }
+    
+  if (currentScreen!=queryResultScreen){
+      queryNum=0;;
+    }
+}
+
+
+void mousePressed(){  //Anand Sainbileg made mousePressed to get event
+int event;
+for(int i = 0; i<currentScreen.screenWidgets.size(); i++){ 
+  Widget aWidget = (Widget) currentScreen.screenWidgets.get(i); //Anand Sainbileg fixed bugs on this method 
+event = aWidget.getEvent(mouseX,mouseY); 
+//chartScreen = false;
+//println(event);
+switch(event) 
+{
+   // Tanuj Sood, 30/03/22, implemented a new  query screen and the subsequent displaying of all the queries using switch statement.
+  case EVENT_QUERY1:                                  
+  aWidget.eventNumber(EVENT_BUTTON2);
+  currentScreen = queryResultScreen;
+  queryResultScreen.addScreenText(300,110,queries.USlaunchesNum(mySpaceObject) , color(0),font);
+  screenList.add(queryResultScreen);
+  return;
+case EVENT_QUERY2:                                  
+  aWidget.eventNumber(EVENT_BUTTON2);
+  currentScreen = queryResultScreen;
+  queryResultScreen.addScreenText(300,110, String.valueOf(queries.getMaxFloat(queries.getLengthArrayList(mySpaceObject))), color(0),font);
+  screenList.add(queryResultScreen);
+  return;
+case EVENT_QUERY3:                                  
+  aWidget.eventNumber(EVENT_BUTTON2);
+  currentScreen = queryResultScreen;
+  queryResultScreen.addScreenText(200,50, "Max mass of the data set is: \n" + String.valueOf(queries.getMaxMass(mySpaceObject)) + "kg", color(255),font);
+  return;
+case EVENT_QUERY5:             
+
+  massy ="";
+  namy="";
+  someMass=queries.sortMassAsc();
+  for (int m=0;m<someMass.length;m++){
+      massy = massy + "\n" + someMass[m];
+      namy = namy + "\n" + queries.returnName()[m];
+      }
+  aWidget.eventNumber(EVENT_BUTTON2);
+  currentScreen = queryResultScreen;
+  queryNum=1;
+  queryResultScreen.add(queryWidget7);
+  screenList.add(queryResultScreen);
+  return;
+case EVENT_QUERY6:             
+  massy ="";
+  namy="";
+  someMass=queries.sortMassDesc();
+  for (int m=0;m<someMass.length;m++){
+      massy = massy + "\n" + someMass[m];
+      namy = namy + "\n" + queries.returnName()[m];
+      }
+  aWidget.eventNumber(EVENT_BUTTON2);
+  currentScreen = queryResultScreen;
+  queryNum=1;
+ 
+  return;
+case EVENT_QUERY7:
+
+median = queries.getMedian(massArray);
+queryResultScreen.addScreenText(200,50,"Median of the data set: \n" + median, color(255),font);
+
+return;
+case EVENT_QUERY8:
+sum = queries.getSum(massArray);
+queryResultScreen.addScreenText(200,50,"Sum of the set: \n" + sum, color(255),font);
+queryResultScreen.add(queryWidget9);
+queryResultScreen.add(queryWidget10);
+return;
+case EVENT_QUERY9:
+mean = queries.getMean(massArray, sum);
+queryResultScreen.addScreenText(200,50,"Mean of the set: \n" + mean, color(255),font);
+return;
+case EVENT_QUERY10:
+sd = queries.getSd(massArray, mean);
+queryResultScreen.addScreenText(200,50,"Standard deviation of the set: \n" + sd, color(255),font);
+return;
+case EVENT_BUTTON1:
+  if (currentScreen == searchScreen && searchScreen.screenNumber!=0) return;
+  aWidget.eventNumber(EVENT_BUTTON1);
+  currentScreen = screen1;
+  screenList.add(screen1);
+  return;
+case EVENT_BUTTON2:
+  aWidget.eventNumber(EVENT_BUTTON2);
+  //chartScreen= true;
+  currentScreen = chartScreen;
+  screenList.add(chartScreen);
+  return;
+case EVENT_BUTTON3:
+  aWidget.eventNumber(EVENT_BUTTON3);
+  return;
+//Ignacy Sus 1/04 Added the option that when the search bar is pressed the "Search" message disappear ( so the user doesn't need to delete it manually)
+case EVENT_SEARCH:
+  println("clicked on a text widget");
+  focus = (SearchBar) searchScreen.searchBar;
+  focus.label = "";
+  return;
+
+case EVENT_SEARCH_SCREEN:
+  searchScreen.setIsActive(0);
+  currentScreen = searchScreen;
+  screenList.add(searchScreen);
+  return;
+case EVENT_BUTTON4:                                  
+  aWidget.eventNumber(EVENT_BUTTON2);
+  currentScreen = queryScreen;
+  screenList.add(queryScreen);
+  return;
+
+
+case EVENT_BUTTON10:            //Anand Sainbileg 04/01/2022 implemented the back button function
+currentGraphBeingDrawn = 0;
+int index = screenList.size()-1;
+screenList.remove(index);
+currentScreen = screenList.get(screenList.size() - 1);
+queryResultScreen.remove(queryWidget9);
+queryResultScreen.remove(queryWidget10);
+return;
+case EVENT_ENTER:
+  currentScreen = screen1;
+  screenList.add(screen1);
+  return;
+case EVENT_BUTTON11:
+  currentGraphBeingDrawn = EVENT_BUTTON11;
+  if (!chartScreen.contains(swapWidget))
+  {
+    chartScreen.add(swapWidget);
+  }
+  return;
+case EVENT_BUTTON12:
+  currentGraphBeingDrawn = EVENT_BUTTON12;
+  if (!chartScreen.contains(swapWidget))
+  {
+    chartScreen.add(swapWidget);
+  }
+  return;
+case EVENT_BUTTON13:
+  currentGraphBeingDrawn = EVENT_BUTTON13;
+  if (!chartScreen.contains(swapWidget))
+  {
+    chartScreen.add(swapWidget);
+  }
+  return;
+case EVENT_BUTTON14:
+  currentGraphBeingDrawn = EVENT_BUTTON14;
+  if (!chartScreen.contains(swapWidget))
+  {
+    chartScreen.add(swapWidget);
+  }
+  return;
+case EVENT_BUTTON15:
+  currentGraphBeingDrawn = EVENT_BUTTON15;
+  chartScreen.remove(swapWidget);
+  return;
+case EVENT_BUTTON16:
+  swapCharts(chartList);
+  return;
+case EVENT_BUTTON17:
+  currentScreen = scatterPlotScreen;
+  screenList.add(scatterPlotScreen);
+  currentGraphBeingDrawn = 0;
+  return;
+
+case EVENT_BUTTON18://Gerard Moylan 6/4/22 below is for controlling the scatter plot's x and y axis.
+if (selectedParameter2 != massArrayList)
+{
+  scatterPlotWidgets = setWidgetsWhite(scatterPlotWidgets);
+  massSelect.widgetColor = color(100);
+  selectedParameter = massArrayList;
+  scatterPlot.horizontalText = "Mass";
+  scatterPlot.xUpperLim = MASS_UPPER_LIMIT;
+  scatterPlot.xLowerLim = -0.5;
+}
+  return;
+case EVENT_BUTTON19:
+if (selectedParameter2 != lengthArrayList)
+{
+  scatterPlotWidgets = setWidgetsWhite(scatterPlotWidgets);
+  lengthSelect.widgetColor = color(100);
+  selectedParameter = lengthArrayList;
+  scatterPlot.horizontalText = "Length";
+  scatterPlot.xUpperLim = LENGTH_UPPER_LIMIT;
+  scatterPlot.xLowerLim = -0.5;
+}
+  return;
+case EVENT_BUTTON20:
+if (selectedParameter2 != diameterArrayList)
+{
+  scatterPlotWidgets = setWidgetsWhite(scatterPlotWidgets);
+  diameterSelect.widgetColor = color(100);
+  selectedParameter = diameterArrayList;
+  scatterPlot.horizontalText = "Diameter";
+  scatterPlot.xUpperLim = DIAMETER_UPPER_LIMIT;
+  scatterPlot.xLowerLim = -0.5;
+}
+  return;
+case EVENT_BUTTON21:
+if (selectedParameter2 != launchYearList)
+{
+  scatterPlotWidgets = setWidgetsWhite(scatterPlotWidgets);
+  launchYearSelect.widgetColor = color(100);
+  selectedParameter = launchYearList;
+  scatterPlot.horizontalText = "Launch year";
+  scatterPlot.xLowerLim = LAUNCH_YEAR_LOWER_LIMIT;
+  scatterPlot.xUpperLim = LAUNCH_YEAR_UPPER_LIMIT;
+
+}
+  return;
+case EVENT_BUTTON22:
+if (selectedParameter2 != apogeeArrayList)
+{
+  scatterPlotWidgets = setWidgetsWhite(scatterPlotWidgets);
+  apogeeSelect.widgetColor = color(100);
+  selectedParameter = apogeeArrayList;
+  scatterPlot.horizontalText = "Apogee";
+  scatterPlot.xUpperLim = APOGEE_UPPER_LIMIT;
+  scatterPlot.xLowerLim = -0.5;
+}
+  return;
+case EVENT_BUTTON23:
+if (selectedParameter2 != perigeeArrayList)
+{
+  scatterPlotWidgets = setWidgetsWhite(scatterPlotWidgets);
+  perigeeSelect.widgetColor = color(100);
+  selectedParameter = perigeeArrayList;
+  scatterPlot.horizontalText = "Perigee";
+  scatterPlot.xUpperLim = PERIGEE_UPPER_LIMIT;
+  scatterPlot.xLowerLim = -0.5;
+}
+  return;
+case EVENT_BUTTON24:
+if (selectedParameter2 != incArrayList)
+{
+  scatterPlotWidgets = setWidgetsWhite(scatterPlotWidgets);
+  incSelect.widgetColor = color(100);
+  selectedParameter = incArrayList;
+  scatterPlot.horizontalText = "Inclination";
+  scatterPlot.xUpperLim = INCLINATION_UPPER_LIMIT;
+  scatterPlot.xLowerLim = -0.5;
+}
+  return;
+case EVENT_BUTTON25:
+if (selectedParameter != massArrayList)
+{
+scatterPlotWidgets2 = setWidgetsWhite(scatterPlotWidgets2);
+massSelect2.widgetColor = color(100);
+selectedParameter2 = massArrayList;
+scatterPlot.verticalText = "Mass";
+scatterPlot.yUpperLim = MASS_UPPER_LIMIT;
+scatterPlot.yLowerLim = -0.5;
+}
+  return;
+case EVENT_BUTTON26:
+if (selectedParameter != lengthArrayList)
+{
+  scatterPlotWidgets2 = setWidgetsWhite(scatterPlotWidgets2);
+  lengthSelect2.widgetColor = color(100);
+  selectedParameter2 = lengthArrayList;
+  scatterPlot.verticalText = "Length";
+  scatterPlot.yUpperLim = LENGTH_UPPER_LIMIT;
+  scatterPlot.yLowerLim = -0.5;
+}
+  return;
+case EVENT_BUTTON27:
+if (selectedParameter != diameterArrayList)
+{
+  scatterPlotWidgets2 = setWidgetsWhite(scatterPlotWidgets2);
+  diameterSelect2.widgetColor = color(100);
+  selectedParameter2 = diameterArrayList;
+  scatterPlot.verticalText = "Diameter";
+  scatterPlot.yUpperLim = DIAMETER_UPPER_LIMIT;
+  scatterPlot.yLowerLim = -0.5;
+}
+  return;
+case EVENT_BUTTON28:
+if (selectedParameter != launchYearList)
+{
+  scatterPlotWidgets2 = setWidgetsWhite(scatterPlotWidgets2);
+  launchYearSelect2.widgetColor = color(100);
+  selectedParameter2 = launchYearList;
+  scatterPlot.verticalText = "Launch Year";
+  scatterPlot.yLowerLim = LAUNCH_YEAR_LOWER_LIMIT;
+  scatterPlot.yUpperLim = LAUNCH_YEAR_UPPER_LIMIT;
+}
+  return;
+case EVENT_BUTTON29:
+if (selectedParameter != apogeeArrayList)
+{
+  scatterPlotWidgets2 = setWidgetsWhite(scatterPlotWidgets2);
+  apogeeSelect2.widgetColor = color(100);
+  selectedParameter2 = apogeeArrayList;
+  scatterPlot.verticalText = "Apogee";
+  scatterPlot.yUpperLim = APOGEE_UPPER_LIMIT;
+  scatterPlot.yLowerLim = -0.5;
+}
+  return;
+case EVENT_BUTTON30:
+if (selectedParameter != perigeeArrayList)
+{
+  scatterPlotWidgets2 = setWidgetsWhite(scatterPlotWidgets2);
+  perigeeSelect2.widgetColor = color(100);
+  selectedParameter2 = perigeeArrayList;
+  scatterPlot.verticalText = "Perigee";
+  scatterPlot.yUpperLim = PERIGEE_UPPER_LIMIT;
+  scatterPlot.yLowerLim = -0.5;
+}
+  return;
+case EVENT_BUTTON31:
+if (selectedParameter != incArrayList)
+{
+  scatterPlotWidgets2 = setWidgetsWhite(scatterPlotWidgets2);
+  incSelect2.widgetColor = color(100);
+  selectedParameter2 = incArrayList;
+  scatterPlot.verticalText = "Inclination";
+  scatterPlot.yUpperLim = INCLINATION_UPPER_LIMIT;
+  scatterPlot.yLowerLim = -0.5;
+}
+  return;
+case EVENT_BUTTON34:
+  currentGraphBeingDrawn = EVENT_BUTTON34;
+  return;
+case EVENT_BUTTON35:
+  currentGraphBeingDrawn = EVENT_BUTTON35;
+  return;
+case EVENT_BUTTON36:
+  currentGraphBeingDrawn = EVENT_BUTTON36;
+  return;
+case EVENT_BUTTON37:
+  currentGraphBeingDrawn = EVENT_BUTTON37;
+  return;
+case EVENT_BUTTON38:
+if (scatterPlot.xUpperLim != 0.0 && scatterPlot.yUpperLim != 0.0)
+{
+    scatterPlot.xAxisVariable = selectedParameter;
+    scatterPlot.yAxisVariable = selectedParameter2;
+    scatterPlot.removePoints();
+    scatterPlot.addScatterPoints();
+    scatterPlot.updateParameters();
+    currentGraphBeingDrawn = EVENT_BUTTON38;
+}
+  return;
+  case EVENT_GAL:
+  currentScreen = galScreen;
+  screenList.add(galScreen);
+  return;
+case EVENT_GAL1:
+  currentScreen = galResult;            // Anand Sainbileg implemented gallery query 04/07/2022
+  galResult.addScreenText(800,70, "Sputnik 1 was the first artificial Earth satellite. \nIt was launched into an elliptical low Earth \norbit by the Soviet Union on 4 October 1957.", color(255),font);
+  galResult.addScreenText2(200,500, "Launch mass: 83.6kg", color(255),font);
+  galResult.addScreenText3(200,560, "Apogee altitude: 939km", color(255),font);
+  galResult.addScreenText4(800,500, "Mission duration: 22 days", color(255),font);
+  galResult.addScreenText5(800,560, "Decay date: 4th January 1958", color(255),font);
+  galResult.changeBackground(sputnik);
+  screenList.add(galResult);
+  return;
+case EVENT_GAL2:         // Anand Sainbileg implemented gallery query 04/11/2022
+  currentScreen = galResult;
+  galResult.addScreenText(900,110, "International Space Station \nis a modular space station \n(habitable artificial satellite) \nin low Earth orbit.", color(255),font);
+  galResult.addScreenText2(50,500, "Launch mass: 440,725kg", color(255),font);
+  galResult.addScreenText3(50,560, "Owned by: NASA, Roscosmos,\n JAXA, ESA, CSA", color(255),font);
+  galResult.addScreenText4(50,650, "State: ", color(255),font);
+  galResult.addScreenText5(50,690, "In service since 1998 to present", color(255),font);
+  galResult.changeBackground(isc); 
+  screenList.add(galResult);
+  return;
+case EVENT_GAL3:
+  currentScreen = galResult;
+  galResult.addScreenText(800,70, "KalamSat, the lightest and smallest satellite\n is a femtosatellite.", color(255),font);
+  galResult.addScreenText2(200,500, "", color(255),font);
+  galResult.addScreenText3(200,560, "", color(255),font);
+  galResult.addScreenText4(0,450, " Weight: 64 grams \n Size: 3.8cm cube.", color(255),font);
+  galResult.addScreenText5(0,560, " The structure is fully 3D-printed with \nreinforced carbon fiber polymer.\n It is equipped with a nano Geiger Muller counter \nwhich will measure radiation in space.", color(255),font);
+  galResult.changeBackground(kalamSat);
+  screenList.add(galResult);
+  return;
+case EVENT_GAL4:
+  currentScreen = galResult;
+  galResult.addScreenText2(50,500, "The Parker Solar Probe", color(255),font);
+  galResult.addScreenText3(50,560, "Owned by: NASA", color(255),font);
+  galResult.addScreenText4(50,650, "Top speed: 586,000 kph ", color(255),font);
+  galResult.addScreenText5(50,690, "Parker holds the closest-distance record,\n getting a mere 8.5 million km \nfrom the sun's surface, which is \nknown as the photosphere.", color(255),font);
+  galResult.changeBackground(parker);
+  screenList.add(galResult);
+  return;
+  
+    }
+    
+
+  }
+  
+}
+//Ignacy Sus 29/03 adding keyboard input for the searchBar class and the search screen, 
+// Ignacy Sus 30/03 adding the checkKeys[i] with an if statement to fix the shift and capslock bug which made a search impossible ( except for numbers), as it was also labelled as a key when typing
+  void keyPressed(){
+    
+    if(focus !=null){
+      for (int i = 0; i<checkKeys.length;i++){
+        if (checkKeys[i]==key ){
+          focus.append(key);
+        }
+      }
+    }
+  }
+ void mouseReleased(){  //Anand Sainbileg made mouseReleased to make the widget's color change back to normal after releasing the mouse off of it
+  int g = 0;
+  for (int i = 0; i < currentScreen.screenWidgets.size(); i++){      //Anand Sainbileg fixed bugs on this method
+      Widget aWidget = (Widget) currentScreen.screenWidgets.get(i);
+      if (aWidget.event < 406 || aWidget.event > 419)
+      {
+        aWidget.eventNumber(g);
+      }
+      }
+  }
+
+void displayAll(){
+  for (int i=0; i<mySpaceObject.size(); i++){ // Tanuj Sood, creating a for loop to print all the instances, 11:25am 21/03/2022
+    if (VARIATION*i<displayHeight)
+    {
+      text(mySpaceObject.get(i).getString(),TEXT_X,TEXT_Y+i*VARIATION); 
+    }
+    
+  }
+  
+}

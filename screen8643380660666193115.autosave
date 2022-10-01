@@ -1,0 +1,55 @@
+class Screen {    //Anand Sainbileg created screen class and implemented all the methods and variables
+boolean isText = false;
+int textX, textY;
+color col;
+PFont myFont;
+String text;
+ArrayList screenWidgets; 
+color screenColor;
+ArrayList screenImages;
+Screen(color screenColor){ 
+screenWidgets=new ArrayList(); 
+screenImages = new ArrayList();      //Anand Sainbileg added methods and ArrayList for image class 3/30/2022
+this.screenColor=screenColor;
+myFont = loadFont("AcademyEngravedLetPlain-30.vlw");
+}
+void add(Widget w){
+screenWidgets.add(w); 
+}
+
+void addImage(Images image){
+screenImages.add(image);
+}
+
+void draw(){
+background(screenColor);
+for(int i = 0; i<screenWidgets.size(); i++){
+Widget aWidget = (Widget)screenWidgets.get(i);
+aWidget.draw(); 
+  }
+  
+for(int a = 0; a<screenImages.size(); a++){
+Images image = (Images)screenImages.get(a);
+image.draw();
+  }
+  if (isText){                                  //  Tanuj Sood, 30/03/22, implementing addScreenText method
+  textFont(myFont);  //add comment
+  fill(col);
+  text(text, textX,textY);
+  }
+ }
+void addScreenText(int x, int y, String label, color colour){   //  Tanuj Sood, 30/03/22, created addScreenText method to add some text to a screen( not perfect, improve to take in multiple texts)
+
+  isText=true;
+  textX=x;
+  textY=y;
+  text=label;
+  col=colour;
+}
+int getEvent(int mx, int my){
+for(int i = 0; i<screenWidgets.size(); i++){ Widget aWidget = (Widget) screenWidgets.get(i); int event = aWidget.getEvent(mouseX,mouseY); if(event != EVENT_NULL){
+return event; }
+}
+return EVENT_NULL; 
+  }
+}
